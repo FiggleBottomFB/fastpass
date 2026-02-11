@@ -1,0 +1,26 @@
+.user-container{
+    border: 1px black solid;
+    width: 49vw;
+    display: flex;
+    justify-content: space-around;
+    height: 1rem;
+}
+.product-container{
+    border: 1px black solid;
+    width: 49vw;
+    display: flex;
+    justify-content: space-around;
+    height: 1rem;
+}
+#info-container{
+    display: flex;
+    flex-flow: row;
+}
+#prod{
+    display: flex;
+    flex-flow: column;
+}
+#user{
+    display: flex;
+    flex-flow: column;
+}

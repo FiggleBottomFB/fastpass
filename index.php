@@ -1,0 +1,102 @@
+<?php
+require_once 'api/apihandler.php';
+
+$apihandler = new APIHandler();
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <script>
+        async function buyTicket(e){
+            // e.preventDefault();
+            var userid = parseInt(document.getElementsByName("userid")[0].value);
+            var productid = parseInt(document.getElementsByName("productid")[0].value);
+            const response = await fetch("http://localhost:8080/fastpass/api/buyticket.php", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({"user_id": userid, "product_id": productid, "code": ""})
+            });
+            const data = await response.json();
+            console.log(data); 
+        }
+    </script>
+    <form action="" method="post" onsubmit="buyTicket(event)">
+        <label for="userid">Användarens id</label>
+        <input type="number" name="userid" id="">
+        <label for="productid">Produktens id</label>
+        <input type="number" name="productid" id="">
+        <button onclick="">Köp biljett</button>
+    </form>
+    <div id="info-container">
+        <div id="user">
+        <?php
+            for($i=1;$i<11;$i++){
+                $users = $apihandler->getAllUsers($i);
+                echo '<div class="user-container">'.
+                        '<p>'.$users["username"].'</p>'.
+                        '<p>'.$users["balance"].'</p>'.
+                    '</div>';
+            }
+        ?>
+        </div>
+        <div id="prod">
+        <?php
+            for($i=1;$i<11;$i++){
+                $products = $apihandler->getAllProducts($i);
+                echo '<div class="product-container">'.
+                        '<p>'.$products["name"].'</p>'.
+                        '<p>'.$products["price"].'</p>'.
+                        '<p>'.$products["stock_count"].'</p>'.
+                    '</div>';
+            }
+        ?>
+        </div>
+    </div>
+
+
+    <button onclick="spamBuyTickets()">Skicka massor av requests</button>
+
+<script>
+async function buyTicket(userid, productid) {
+    const response = await fetch("http://localhost:8080/fastpass/api/buyticket.php", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({"user_id": userid, "product_id": productid, "code": ""})
+    });
+
+    return response.json();
+    // const data = await response.json();
+    // console.log(data); 
+}
+
+async function spamBuyTickets() {
+    const NUMBER_OF_REQUESTS = 1000;
+    const productid = 10;
+
+    console.log("Startar stress-test...");
+
+    const promises = [];
+
+    for (let i = 0; i < NUMBER_OF_REQUESTS; i++) {
+        const randomUserId = Math.floor(Math.random() * 10) + 1;
+        promises.push(buyTicket(randomUserId, productid));
+    }
+
+    try {
+        const results = await Promise.all(promises);
+        console.log("Alla requests klara:", results);
+    } catch (err) {
+        console.error("Fel vid requests:", err);
+    }
+}
+</script>
+
+</body>
+</html>
