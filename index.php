@@ -37,25 +37,25 @@ $apihandler = new APIHandler();
     <div id="info-container">
         <div id="user">
         <?php
-            for($i=1;$i<11;$i++){
-                $users = $apihandler->getAllUsers($i);
-                echo '<div class="user-container">'.
-                        '<p>'.$users["username"].'</p>'.
-                        '<p>'.$users["balance"].'</p>'.
-                    '</div>';
-            }
+            // for($i=1;$i<11;$i++){
+            //     $users = $apihandler->getAllUsers($i);
+            //     echo '<div class="user-container">'.
+            //             '<p>'.$users["username"].'</p>'.
+            //             '<p>'.$users["balance"].'</p>'.
+            //         '</div>';
+            // }
         ?>
         </div>
         <div id="prod">
         <?php
-            for($i=1;$i<11;$i++){
-                $products = $apihandler->getAllProducts($i);
-                echo '<div class="product-container">'.
-                        '<p>'.$products["name"].'</p>'.
-                        '<p>'.$products["price"].'</p>'.
-                        '<p>'.$products["stock_count"].'</p>'.
-                    '</div>';
-            }
+            // for($i=1;$i<11;$i++){
+            //     $products = $apihandler->getAllProducts($i);
+            //     echo '<div class="product-container">'.
+            //             '<p>'.$products["name"].'</p>'.
+            //             '<p>'.$products["price"].'</p>'.
+            //             '<p>'.$products["stock_count"].'</p>'.
+            //         '</div>';
+            // }
         ?>
         </div>
     </div>
@@ -72,13 +72,10 @@ async function buyTicket(userid, productid) {
     });
 
     return response.json();
-    // const data = await response.json();
-    // console.log(data); 
 }
 
 async function spamBuyTickets() {
-    const NUMBER_OF_REQUESTS = 1000;
-    const productid = 10;
+    const NUMBER_OF_REQUESTS = 5000;
 
     console.log("Startar stress-test...");
 
@@ -86,7 +83,8 @@ async function spamBuyTickets() {
 
     for (let i = 0; i < NUMBER_OF_REQUESTS; i++) {
         const randomUserId = Math.floor(Math.random() * 10) + 1;
-        promises.push(buyTicket(randomUserId, productid));
+        const randomProductId = Math.floor(Math.random() * 10) + 1;
+        promises.push(buyTicket(randomUserId, randomProductId));
     }
 
     try {

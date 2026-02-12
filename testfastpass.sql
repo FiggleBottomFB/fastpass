@@ -47,15 +47,15 @@ CREATE TABLE orders (
 -- -----------------------------------------------------
 
 INSERT INTO products (name, price, stock_count) VALUES 
-('VIP Festival Pass', 2500.00, 50),
-('Standard Ticket', 1200.00, 200),
-('Backstage Add-on', 500.00, 10),
-('Camping Spot', 350.00, 150),
-('Early Bird Special', 900.00, 0),
-('Parking Pass', 150.00, 75),
-('Food Voucher Bundle', 450.00, 100),
-('Official Merchandise Hoodie', 650.00, 40),
-('Poster Limited Edition', 200.00, 25),
+('VIP Festival Pass', 25.00, 5000000),
+('Standard Ticket', 10.00, 2000000),
+('Backstage Add-on', 50.00, 100000),
+('Camping Spot', 35.00, 1500000),
+('Early Bird Special', 90.00, 10000000),
+('Parking Pass', 10.00, 7500000),
+('Food Voucher Bundle', 40.00, 10000000),
+('Official Merchandise Hoodie', 60.00, 40000000),
+('Poster Limited Edition', 20.00, 25000000),
 ('Locker Rental', 100.00, 600000);
 
 INSERT INTO users (username, balance) VALUES 

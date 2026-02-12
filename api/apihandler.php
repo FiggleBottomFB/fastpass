@@ -6,7 +6,7 @@ Class APIHandler{
 
     function __construct() {
         $host = "localhost";
-        $db   = "fastpass";
+        $db   = "fastpassnew";
         $user = "root";
         $pass = "";
 
@@ -28,13 +28,13 @@ Class APIHandler{
 
         for ($i = 0; $i < $maxRetries; $i++) {
             try{
-                $price = $this->getProductPrice($productId);
-                $loggerinfo = $this->getLoggerInfo($userId, $productId);
+                $product = $this->getProductInfo($productId);
                 //region handle user balance
-                $balance = $this->getUserBalance($userId);
-                if($balance < $price){
+                $user = $this->getUserInfo($userId);
+                if($user['balance'] < $product['price']){
                     $this->conn->rollback();
                     echo json_encode(["status" => "error", "message" => "invalid balance"]);
+                    $this->writeToError($user['username'], $product['productname'], $product['price'], "invalid balance");
                     return;
                 }
                 //endregion
@@ -47,6 +47,7 @@ Class APIHandler{
                 if($stmt->affected_rows !== 1){
                     $this->conn->rollback();
                     echo json_encode(["status" => "error", "message" => "no ticket available"]);
+                    $this->writeToError($user['username'], $product['productname'], $product['price'], "no ticket available");
                     return;
                 }
                 //endregion
@@ -54,16 +55,16 @@ Class APIHandler{
                 //region handle add into orders
                 if($code == ""){
                     $stmt = $this->conn->prepare("INSERT INTO orders (user_id, product_id, total_amount) VALUES (?, ?, ?)");
-                    $stmt->bind_param("iid", $userId, $productId, $price);
+                    $stmt->bind_param("iid", $userId, $productId, $product['price']);
                     $stmt->execute();
                     $stmt = $this->conn->prepare("UPDATE users SET balance = balance - ? WHERE id = ?");
-                    $stmt->bind_param("ii", $price, $userId);
+                    $stmt->bind_param("ii", $product['price'], $userId);
                     $stmt->execute();
                 }
                 else {
                     // $totalAmount = 0.00;
                     $stmt = $this->conn->prepare("INSERT INTO orders (user_id, product_id, total_amount) VALUES (?, ?, ?)");
-                    $stmt->bind_param("iid", $userId, $productId, $price);
+                    $stmt->bind_param("iid", $userId, $productId, $product['price']);
                     $stmt->execute();
                 }
                 //endregion
@@ -75,15 +76,17 @@ Class APIHandler{
                 if (function_exists('fastcgi_finish_request')) {
                     fastcgi_finish_request();
                 }
-                $payload = base64_encode(json_encode([
-                    'userName' => $loggerinfo[0],
-                    'productName' => $loggerinfo[1],
-                    'totalAmount' => $price
-                ]));
-                
-                $phpPath = 'C:\\xampp\\php\\php.exe';
-                $workerPath = __DIR__ . '\\logger.php';
-                exec("\"$phpPath\" \"$workerPath\" $payload > NUL 2>&1 &");
+                $log = sprintf(
+                    "[%s] [USER: %s] | [PRODUCT: %s] | [TOTAL: %s] | [CODE: %s]\n",
+                    date('Y-m-d H:i:s'),
+                    $user['username'],
+                    $product['name'],
+                    $product['price'],
+                    $code ?: 'NONE'
+                );
+
+                $filename = __DIR__ . '/logs/' . date('Y-m-d_H-i-s') . bin2hex(random_bytes(5)) . '.log';
+                file_put_contents($filename, $log, FILE_APPEND | LOCK_EX);
                 //endregion
 
                 return;
@@ -92,39 +95,35 @@ Class APIHandler{
                 $this->conn->rollback();
 
                 if (str_contains($e->getMessage(), 'X-TRANS-REJECTED')) {
-                    echo json_encode(["status" => "error","message" => "Too many orders"]);
+                    echo json_encode(["status" => "error", "message" => "Too many orders"]);
+                    $this->writeToError($user['username'], $product['productname'], $product['price'], $e->getMessage());
                     return;
                 }
 
-                echo json_encode(["status" => "error","message" => "Something went wrong"]);
+                echo json_encode(["status" => "error", "message" => "Something went wrong"]);
+                $this->writeToError($user['username'], $product['productname'], $product['price'], $e->getMessage());
                 return;
             }
         }
     }
 
-    function getLoggerInfo($userId, $productId){
-        try{
-            $stmt = $this->conn->prepare("SELECT username FROM users WHERE id = ? FOR UPDATE");
-            $stmt->bind_param("i", $userId);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $username = $result->fetch_assoc();
-
-            $stmt = $this->conn->prepare("SELECT name FROM products WHERE id = ? FOR UPDATE");
-            $stmt->bind_param("i", $productId);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $productname = $result->fetch_assoc();
-
-            return [$username["username"], $productname["name"]];
+    function writeToError($username, $productname, $productprice, $reason){
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
         }
-        catch(Exception $e){
-            throw $e;
-        }
+        $log = sprintf(
+            "[%s] [USER: %s] | [PRODUCT: %s] | [TOTAL: %s] | [Reason: %s]\n",
+            date('Y-m-d H:i:s'),
+            $username,
+            $productname,
+            $productprice,
+            $reason
+        );
+        file_put_contents(__DIR__ . '/failedorders.log', $log, FILE_APPEND | LOCK_EX);
     }
-    function getProductPrice($productId){
+    function getProductInfo($productId){
         try{
-            $stmt = $this->conn->prepare("SELECT price FROM products WHERE id = ? FOR UPDATE");
+            $stmt = $this->conn->prepare("SELECT price, name FROM products WHERE id = ? FOR UPDATE");
             $stmt->bind_param("i", $productId);
             $stmt->execute();
 
@@ -135,15 +134,15 @@ Class APIHandler{
                 throw new Exception("Product not found");
             }
 
-            return $price["price"];
+            return $price;
         }
         catch(Exception $e){
             throw $e;
         }
     }
-    function getUserBalance($userId){
+    function getUserInfo($userId){
         try{
-            $stmt = $this->conn->prepare("SELECT balance FROM users WHERE id = ? FOR UPDATE");
+            $stmt = $this->conn->prepare("SELECT balance, username FROM users WHERE id = ? FOR UPDATE");
             $stmt->bind_param("i", $userId);
             $stmt->execute();
 
@@ -154,33 +153,7 @@ Class APIHandler{
                 throw new Exception("User not found");
             }
 
-            return $balance["balance"];
-        }
-        catch(Exception $e){
-            throw $e;
-        }
-    }
-    function getAllUsers($userId){
-        try{
-            $stmt = $this->conn->prepare("SELECT * FROM users WHERE id = ?");
-            $stmt->bind_param("i", $userId);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $users = $result->fetch_assoc();
-            return $users;
-        }
-        catch(Exception $e){
-            throw $e;
-        }
-    }
-    function getAllProducts($productId){
-        try{
-            $stmt = $this->conn->prepare("SELECT * FROM products WHERE id = ?");
-            $stmt->bind_param("i", $productId);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $products = $result->fetch_assoc();
-            return $products;
+            return $balance;
         }
         catch(Exception $e){
             throw $e;
@@ -188,4 +161,52 @@ Class APIHandler{
     }
 }
 
+
+                // $userName = escapeshellarg($user['username']);
+                // $productName = escapeshellarg($product['name']);
+                // $price = escapeshellarg($product['price']);
+                // $status = escapeshellarg("success");
+
+                // $phpPath = 'C:\\xampp\\php\\php.exe';
+                // $workerPath = __DIR__ . '\\logger.php';
+                // exec("\"$phpPath\" \"$workerPath\" $userName $productName $price $status > /dev/null 2>&1 &");
+
+
+                // $payload = base64_encode(json_encode([
+                //     'userName' => $user['username'],
+                //     'productName' => $product['name'],
+                //     'totalAmount' => $product['price'],
+                //     "code" => $code
+                // ]));
+                
+                // $phpPath = 'C:\\xampp\\php\\php.exe';
+                // $workerPath = __DIR__ . '\\logger.php';
+                // exec("\"$phpPath\" \"$workerPath\" $payload > NUL 2>&1 &");
+
+
+                // $log = sprintf(
+                //     "[%s] [USER: %s] | [PRODUCT: %s] | [TOTAL: %s] | [CODE: %s]\n",
+                //     date('Y-m-d H:i:s'),
+                //     $user['username'],
+                //     $product['name'],
+                //     $product['price'],
+                //     $code ?: 'NONE'
+                // );
+                // file_put_contents(__DIR__ . '/orders.log', $log, FILE_APPEND | LOCK_EX);
+
+                 // register_shutdown_function(function () use ($user, $product) {
+                //     $logLine = sprintf(
+                //         "[%s] User: %s | Product: %s | Price: %.2f | Status: %s\n",
+                //         date("Y-m-d H:i:s"),
+                //         $user['username'],
+                //         $product['name'],
+                //         $product['price'],
+                //         "success"
+                //     );
+                //     file_put_contents(
+                //         __DIR__ . DIRECTORY_SEPARATOR . 'orders.log',
+                //         $logLine,
+                //         FILE_APPEND | LOCK_EX
+                //     );
+                // });
 ?>
