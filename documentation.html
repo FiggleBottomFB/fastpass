@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            line-height: 1.6;
+            margin: 40px;
+            color: #222;
+        }
+        h1, h2, h3 {
+            color: #1a1a1a;
+        }
+        code, pre {
+            background: #f4f4f4;
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-family: Consolas, monospace;
+        }
+        pre {
+            padding: 16px;
+            overflow-x: auto;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 16px 0;
+        }
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        table th {
+            background: #f0f0f0;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: #e8e8e8;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <!-- <div class="endpoint-header-container">
+        <h3>Endpoint url: &nbsp</h3>
+        <h3 id="url-header">http://localhost:8080/fastpass/api/buyticket.php</h3>
+    </div> -->
+    <h1>Buy Ticket Endpoint</h1>
+
+<p>
+    This endpoint allows a user to purchase a ticket for a specific product.
+    An optional campaign code can be provided.
+</p>
+
+<hr>
+
+<h2>Endpoint</h2>
+
+<p>
+    <span class="badge">POST</span>
+    <code>/api/buy-ticket</code>
+</p>
+
+<h2>Headers</h2>
+
+<pre>
+Content-Type: application/json
+</pre>
+
+<h2>Request Body</h2>
+
+<p>The request body must be valid JSON with the following fields:</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Field</th>
+            <th>Type</th>
+            <th>Required</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>product_id</code></td>
+            <td>integer</td>
+            <td>Yes</td>
+            <td>ID of the product/ticket being purchased</td>
+        </tr>
+        <tr>
+            <td><code>user_id</code></td>
+            <td>integer</td>
+            <td>Yes</td>
+            <td>ID of the user making the purchase</td>
+        </tr>
+        <tr>
+            <td><code>campaign_code</code></td>
+            <td>string</td>
+            <td>No</td>
+            <td>Optional promotional or campaign code</td>
+        </tr>
+    </tbody>
+</table>
+
+<h3>Example Request</h3>
+
+<pre>
+{
+    "product_id": 42,
+    "user_id": 7,
+    "campaign_code": "SUMMER2026"
+}
+</pre>
+
+<h2>Responses</h2>
+
+<h3>Success</h3>
+
+<p>
+    On success, the ticket purchase is processed via the internal
+    <code>buyTicket()</code> method.
+</p>
+
+<p><em>(Exact success response depends on the APIHandler implementation.)</em></p>
+
+<h3>Error Response</h3>
+
+<p>Returned when invalid data types are provided.</p>
+
+<pre>
+{
+    "status": "error",
+    "message": "Invalid data types"
+}
+</pre>
+
+<hr>
+
+<h2>Notes</h2>
+
+<ul>
+    <li>The request body is read from <code>php://input</code></li>
+    <li>All responses are returned as JSON</li>
+    <li>The endpoint assumes authentication/authorization is handled elsewhere</li>
+</ul>
+</body>
+</html>

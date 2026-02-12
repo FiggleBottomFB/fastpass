@@ -34,7 +34,7 @@ Class APIHandler{
                 if($user['balance'] < $product['price']){
                     $this->conn->rollback();
                     echo json_encode(["status" => "error", "message" => "invalid balance"]);
-                    $this->writeToError($user['username'], $product['productname'], $product['price'], "invalid balance");
+                    $this->writeToError($user['username'], $product['name'], $product['price'], "invalid balance");
                     return;
                 }
                 //endregion
@@ -47,7 +47,7 @@ Class APIHandler{
                 if($stmt->affected_rows !== 1){
                     $this->conn->rollback();
                     echo json_encode(["status" => "error", "message" => "no ticket available"]);
-                    $this->writeToError($user['username'], $product['productname'], $product['price'], "no ticket available");
+                    $this->writeToError($user['username'], $product['name'], $product['price'], "no ticket available");
                     return;
                 }
                 //endregion
@@ -96,12 +96,12 @@ Class APIHandler{
 
                 if (str_contains($e->getMessage(), 'X-TRANS-REJECTED')) {
                     echo json_encode(["status" => "error", "message" => "Too many orders"]);
-                    $this->writeToError($user['username'], $product['productname'], $product['price'], $e->getMessage());
+                    $this->writeToError($user['username'], $product['name'], $product['price'], $e->getMessage());
                     return;
                 }
 
                 echo json_encode(["status" => "error", "message" => "Something went wrong"]);
-                $this->writeToError($user['username'], $product['productname'], $product['price'], $e->getMessage());
+                $this->writeToError($user['username'], $product['name'], $product['price'], $e->getMessage());
                 return;
             }
         }
@@ -119,7 +119,8 @@ Class APIHandler{
             $productprice,
             $reason
         );
-        file_put_contents(__DIR__ . '/failedorders.log', $log, FILE_APPEND | LOCK_EX);
+        $filename = __DIR__ . '/logs/' . "error" . date('Y-m-d_H-i-s') . bin2hex(random_bytes(5)) . '.log';
+        file_put_contents($filename, $log, FILE_APPEND | LOCK_EX);
     }
     function getProductInfo($productId){
         try{
@@ -160,53 +161,4 @@ Class APIHandler{
         }
     }
 }
-
-
-                // $userName = escapeshellarg($user['username']);
-                // $productName = escapeshellarg($product['name']);
-                // $price = escapeshellarg($product['price']);
-                // $status = escapeshellarg("success");
-
-                // $phpPath = 'C:\\xampp\\php\\php.exe';
-                // $workerPath = __DIR__ . '\\logger.php';
-                // exec("\"$phpPath\" \"$workerPath\" $userName $productName $price $status > /dev/null 2>&1 &");
-
-
-                // $payload = base64_encode(json_encode([
-                //     'userName' => $user['username'],
-                //     'productName' => $product['name'],
-                //     'totalAmount' => $product['price'],
-                //     "code" => $code
-                // ]));
-                
-                // $phpPath = 'C:\\xampp\\php\\php.exe';
-                // $workerPath = __DIR__ . '\\logger.php';
-                // exec("\"$phpPath\" \"$workerPath\" $payload > NUL 2>&1 &");
-
-
-                // $log = sprintf(
-                //     "[%s] [USER: %s] | [PRODUCT: %s] | [TOTAL: %s] | [CODE: %s]\n",
-                //     date('Y-m-d H:i:s'),
-                //     $user['username'],
-                //     $product['name'],
-                //     $product['price'],
-                //     $code ?: 'NONE'
-                // );
-                // file_put_contents(__DIR__ . '/orders.log', $log, FILE_APPEND | LOCK_EX);
-
-                 // register_shutdown_function(function () use ($user, $product) {
-                //     $logLine = sprintf(
-                //         "[%s] User: %s | Product: %s | Price: %.2f | Status: %s\n",
-                //         date("Y-m-d H:i:s"),
-                //         $user['username'],
-                //         $product['name'],
-                //         $product['price'],
-                //         "success"
-                //     );
-                //     file_put_contents(
-                //         __DIR__ . DIRECTORY_SEPARATOR . 'orders.log',
-                //         $logLine,
-                //         FILE_APPEND | LOCK_EX
-                //     );
-                // });
 ?>

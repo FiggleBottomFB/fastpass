@@ -24,3 +24,11 @@
     display: flex;
     flex-flow: column;
 }
+
+#url-header{
+    text-decoration: blue;
+}
+.endpoint-header-container{
+    display: flex;
+    flex-flow: row;
+}

@@ -75,7 +75,7 @@ async function buyTicket(userid, productid) {
 }
 
 async function spamBuyTickets() {
-    const NUMBER_OF_REQUESTS = 5000;
+    const NUMBER_OF_REQUESTS = 1000;
 
     console.log("Startar stress-test...");
 
