@@ -18,9 +18,6 @@ Class APIHandler{
 
 
     function BuyTicket($userId, $productId, $code){
-        if(!in_array($code, $this->validCodes) && $code != ""){
-            return json_encode(["status" => "error", "message" => "invalid code"]);
-        }
 
         $this->conn->begin_transaction();
 
@@ -29,12 +26,21 @@ Class APIHandler{
         for ($i = 0; $i < $maxRetries; $i++) {
             try{
                 $product = $this->getProductInfo($productId);
-                //region handle user balance
                 $user = $this->getUserInfo($userId);
+
+                //region handle campaign code
+                if(!in_array($code, $this->validCodes) && $code != ""){
+                    echo json_encode(["status" => "error", "message" => "invalid code"]);
+                    $this->writeToError($user['username'], $product['name'], $product['price'], "invalid code", $userId, $productId);
+                    return;
+                }
+                //endregion
+
+                //region handle user balance
                 if($user['balance'] < $product['price']){
                     $this->conn->rollback();
                     echo json_encode(["status" => "error", "message" => "invalid balance"]);
-                    $this->writeToError($user['username'], $product['name'], $product['price'], "invalid balance");
+                    $this->writeToError($user['username'], $product['name'], $product['price'], "invalid balance", $userId, $productId);
                     return;
                 }
                 //endregion
@@ -47,7 +53,7 @@ Class APIHandler{
                 if($stmt->affected_rows !== 1){
                     $this->conn->rollback();
                     echo json_encode(["status" => "error", "message" => "no ticket available"]);
-                    $this->writeToError($user['username'], $product['name'], $product['price'], "no ticket available");
+                    $this->writeToError($user['username'], $product['name'], $product['price'], "no ticket available", $userId, $productId);
                     return;
                 }
                 //endregion
@@ -77,9 +83,11 @@ Class APIHandler{
                     fastcgi_finish_request();
                 }
                 $log = sprintf(
-                    "[%s] [USER: %s] | [PRODUCT: %s] | [TOTAL: %s] | [CODE: %s]\n",
+                    "[%s] | [USER ID: %s] | [USER: %s] | [PRODUCT ID: %s] | [PRODUCT: %s] | [TOTAL: %s] | [CODE: %s]\n",
                     date('Y-m-d H:i:s'),
+                    $userId,
                     $user['username'],
+                    $productId,
                     $product['name'],
                     $product['price'],
                     $code ?: 'NONE'
@@ -96,25 +104,27 @@ Class APIHandler{
 
                 if (str_contains($e->getMessage(), 'X-TRANS-REJECTED')) {
                     echo json_encode(["status" => "error", "message" => "Too many orders"]);
-                    $this->writeToError($user['username'], $product['name'], $product['price'], $e->getMessage());
+                    $this->writeToError($user['username'], $product['name'], $product['price'], $e->getMessage(), $userId, $productId);
                     return;
                 }
 
                 echo json_encode(["status" => "error", "message" => "Something went wrong"]);
-                $this->writeToError($user['username'], $product['name'], $product['price'], $e->getMessage());
+                $this->writeToError($user['username'], $product['name'], $product['price'], $e->getMessage(), $userId, $productId);
                 return;
             }
         }
     }
 
-    function writeToError($username, $productname, $productprice, $reason){
+    function writeToError($username, $productname, $productprice, $reason, $userId, $productId){
         if (function_exists('fastcgi_finish_request')) {
             fastcgi_finish_request();
         }
         $log = sprintf(
-            "[%s] [USER: %s] | [PRODUCT: %s] | [TOTAL: %s] | [Reason: %s]\n",
+            "[%s] | [USER ID: %s] | [USER: %s] | [PRODUCT ID: %s] | [PRODUCT: %s] | [TOTAL: %s] | [Reason: %s]\n",
             date('Y-m-d H:i:s'),
+            $userId,
             $username,
+            $productId,
             $productname,
             $productprice,
             $reason

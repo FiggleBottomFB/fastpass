@@ -64,18 +64,20 @@ $apihandler = new APIHandler();
     <button onclick="spamBuyTickets()">Skicka massor av requests</button>
 
 <script>
+var minurl = "http://localhost:8080/fastpass/api/buyticket.php";
+var arvidurl = "http://192.168.218.59:8080/Transaxtions LPS AB/Transaxtions-LPS-AB/php/buy.php";
 async function buyTicket(userid, productid) {
-    const response = await fetch("http://localhost:8080/fastpass/api/buyticket.php", {
+    const response = await fetch(minurl, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({"user_id": userid, "product_id": productid, "code": ""})
+        body: JSON.stringify({"user_id": userid, "product_id": 10, "campaign_code": "FREEBIE"})
     });
 
     return response.json();
 }
 
 async function spamBuyTickets() {
-    const NUMBER_OF_REQUESTS = 1000;
+    const NUMBER_OF_REQUESTS = 10;
 
     console.log("Startar stress-test...");
 

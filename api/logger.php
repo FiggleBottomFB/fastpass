@@ -15,6 +15,7 @@ while(true){
 
     $files = scandir($logsDir);
     sort($files, SORT_STRING);
+
     foreach ($files as $file) {
         if ($file === '.' || $file === '..') continue;
         if (substr($file, -4) !== '.log') continue;
@@ -25,7 +26,7 @@ while(true){
     
         $content = file_get_contents($filePath);
         if ($content === false || $content === '') continue;
-    
+        
         if (strtolower(substr($file, 0, 5)) === 'error') {
             file_put_contents($errorLog, $content, FILE_APPEND | LOCK_EX);
         } else {
