@@ -32,3 +32,52 @@
     display: flex;
     flex-flow: row;
 }
+.toggle-btn {
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    text-decoration: underline;
+}
+
+.toggle-btn:hover {
+    cursor: pointer;
+}
+
+
+pre {
+    background: #f4f4f4;
+    padding: 12px;
+    border-radius: 6px;
+    overflow-x: auto;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 10px 0;
+}
+
+table th, table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+table th {
+    background: #f2f2f2;
+}
+
+.badge {
+    background: #eee;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+#params{
+    display: none;
+}
+#responses{
+    display: none;
+}
+#jsExample{
+    display: none;
+}

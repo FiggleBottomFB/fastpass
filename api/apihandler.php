@@ -1,5 +1,17 @@
 <?php
 
+// Enable CORS
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+
+// Handle preflight request
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
+
 Class APIHandler{
     private mysqli $conn;
     private $validCodes = ["FREEBIE"];
@@ -30,6 +42,7 @@ Class APIHandler{
 
                 //region handle campaign code
                 if(!in_array($code, $this->validCodes) && $code != ""){
+                    $this->conn->rollback();
                     echo json_encode(["status" => "error", "message" => "invalid code"]);
                     $this->writeToError($user['username'], $product['name'], $product['price'], "invalid code", $userId, $productId);
                     return;
@@ -60,40 +73,41 @@ Class APIHandler{
 
                 //region handle add into orders
                 if($code == ""){
-                    $stmt = $this->conn->prepare("INSERT INTO orders (user_id, product_id, total_amount) VALUES (?, ?, ?)");
-                    $stmt->bind_param("iid", $userId, $productId, $product['price']);
-                    $stmt->execute();
                     $stmt = $this->conn->prepare("UPDATE users SET balance = balance - ? WHERE id = ?");
                     $stmt->bind_param("ii", $product['price'], $userId);
                     $stmt->execute();
+                    $stmt = $this->conn->prepare("INSERT INTO orders (user_id, product_id, total_amount) VALUES (?, ?, ?)");
+                    $stmt->bind_param("iid", $userId, $productId, $product['price']);
+                    $stmt->execute();
                 }
                 else {
-                    // $totalAmount = 0.00;
                     $stmt = $this->conn->prepare("INSERT INTO orders (user_id, product_id, total_amount) VALUES (?, ?, ?)");
                     $stmt->bind_param("iid", $userId, $productId, $product['price']);
                     $stmt->execute();
                 }
                 //endregion
+                $id = (int) $this->conn->insert_id;
 
                 $this->conn->commit();
-                echo json_encode(["status" => "success", "message" => "successfully bought tickets"]);
+                echo json_encode(["status" => "success", "message" => "successfully bought tickets", "charged" => !in_array($code, $this->validCodes) ? $product['price'] : 0.00]);
 
                 //region send to logger file
                 if (function_exists('fastcgi_finish_request')) {
                     fastcgi_finish_request();
                 }
                 $log = sprintf(
-                    "[%s] | [USER ID: %s] | [USER: %s] | [PRODUCT ID: %s] | [PRODUCT: %s] | [TOTAL: %s] | [CODE: %s]\n",
+                    "[%s] | [ORDER ID: %s] | [USER ID: %s] | [USER: %s] | [PRODUCT ID: %s] | [PRODUCT: %s] | [TOTAL: %s] | [CODE: %s]\n",
                     date('Y-m-d H:i:s'),
+                    $id,
                     $userId,
                     $user['username'],
                     $productId,
                     $product['name'],
-                    $product['price'],
+                    !in_array($code, $this->validCodes) ? $product['price'] : 0.00,
                     $code ?: 'NONE'
                 );
-
-                $filename = __DIR__ . '/logs/' . date('Y-m-d_H-i-s') . bin2hex(random_bytes(5)) . '.log';
+                //date('Y-m-d_H-i-s') . bin2hex(random_bytes(5))
+                $filename = __DIR__ . '/logs/' . $id . '.log';
                 file_put_contents($filename, $log, FILE_APPEND | LOCK_EX);
                 //endregion
 
@@ -101,32 +115,43 @@ Class APIHandler{
             }
             catch(Exception $e){
                 $this->conn->rollback();
+                if(!isset($product)){
+                    echo json_encode(["status" => "error", "message" => "Product not found"]);
+                    $this->writeToError(reason: "Product not found", productId: $productId, code: $code);
+                    return;
+                }
+                if(!isset($user)){
+                    echo json_encode(["status" => "error", "message" => "User not found"]);
+                    $this->writeToError(reason: "User not found", userId: $userId, code: $code);
+                    return;
+                }
 
                 if (str_contains($e->getMessage(), 'X-TRANS-REJECTED')) {
                     echo json_encode(["status" => "error", "message" => "Too many orders"]);
-                    $this->writeToError($user['username'], $product['name'], $product['price'], $e->getMessage(), $userId, $productId);
+                    $this->writeToError($user['username'], $product['name'], $product['price'], $e->getMessage(), $userId, $productId, $code);
                     return;
                 }
 
                 echo json_encode(["status" => "error", "message" => "Something went wrong"]);
-                $this->writeToError($user['username'], $product['name'], $product['price'], $e->getMessage(), $userId, $productId);
+                $this->writeToError($user['username'], $product['name'], $product['price'], $e->getMessage(), $userId, $productId, $code);
                 return;
             }
         }
     }
 
-    function writeToError($username, $productname, $productprice, $reason, $userId, $productId){
+    function writeToError($username = "", $productname = "", $productprice = "", $reason = "", $userId = "", $productId = "", $code = ""){
         if (function_exists('fastcgi_finish_request')) {
             fastcgi_finish_request();
         }
         $log = sprintf(
-            "[%s] | [USER ID: %s] | [USER: %s] | [PRODUCT ID: %s] | [PRODUCT: %s] | [TOTAL: %s] | [Reason: %s]\n",
+            "[%s] | [USER ID: %s] | [USER: %s] | [PRODUCT ID: %s] | [PRODUCT: %s] | [TOTAL: %s] | [CODE: %s] | [Reason: %s]\n",
             date('Y-m-d H:i:s'),
             $userId,
             $username,
             $productId,
             $productname,
             $productprice,
+            $code,
             $reason
         );
         $filename = __DIR__ . '/logs/' . "error" . date('Y-m-d_H-i-s') . bin2hex(random_bytes(5)) . '.log';
@@ -144,8 +169,8 @@ Class APIHandler{
             if($result->num_rows === 0){
                 throw new Exception("Product not found");
             }
-
             return $price;
+            
         }
         catch(Exception $e){
             throw $e;

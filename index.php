@@ -60,6 +60,34 @@ $apihandler = new APIHandler();
         </div>
     </div>
 
+    <?php
+    
+    $url = "http://localhost:8080/fastpass/api/buyticket.php";
+
+    $data = [
+        "user_id" => 2,
+        "product_id"  => 2
+    ];
+
+    $payload = json_encode($data);
+
+    $ch = curl_init($url);
+
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER => [
+            "Content-Type: application/json",
+            "Content-Length: " . strlen($payload)
+        ],
+        CURLOPT_POSTFIELDS => $payload
+    ]);
+
+    $response = curl_exec($ch);
+
+    echo $response;
+    ?>
+
 
     <button onclick="spamBuyTickets()">Skicka massor av requests</button>
 
@@ -70,14 +98,14 @@ async function buyTicket(userid, productid) {
     const response = await fetch(minurl, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({"user_id": userid, "product_id": 10, "campaign_code": "FREEBIE"})
+        body: JSON.stringify({"user_id": userid, "product_id": 10, "campaign_code": ""})
     });
 
     return response.json();
 }
 
 async function spamBuyTickets() {
-    const NUMBER_OF_REQUESTS = 10;
+    const NUMBER_OF_REQUESTS = 100;
 
     console.log("Startar stress-test...");
 
