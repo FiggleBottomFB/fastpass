@@ -44,7 +44,7 @@ Class APIHandler{
                 if(!in_array($code, $this->validCodes) && $code != ""){
                     $this->conn->rollback();
                     echo json_encode(["status" => "error", "message" => "invalid code"]);
-                    $this->writeToError($user['username'], $product['name'], $product['price'], "invalid code", $userId, $productId);
+                    $this->writeToError($user['username'], $product['name'], $product['price'], "invalid code", $userId, $productId, $code);
                     return;
                 }
                 //endregion
@@ -53,7 +53,7 @@ Class APIHandler{
                 if($user['balance'] < $product['price']){
                     $this->conn->rollback();
                     echo json_encode(["status" => "error", "message" => "invalid balance"]);
-                    $this->writeToError($user['username'], $product['name'], $product['price'], "invalid balance", $userId, $productId);
+                    $this->writeToError($user['username'], $product['name'], $product['price'], "invalid balance", $userId, $productId, $code);
                     return;
                 }
                 //endregion
@@ -66,7 +66,7 @@ Class APIHandler{
                 if($stmt->affected_rows !== 1){
                     $this->conn->rollback();
                     echo json_encode(["status" => "error", "message" => "no ticket available"]);
-                    $this->writeToError($user['username'], $product['name'], $product['price'], "no ticket available", $userId, $productId);
+                    $this->writeToError($user['username'], $product['name'], $product['price'], "no ticket available", $userId, $productId, $code);
                     return;
                 }
                 //endregion
@@ -117,12 +117,12 @@ Class APIHandler{
                 $this->conn->rollback();
                 if(!isset($product)){
                     echo json_encode(["status" => "error", "message" => "Product not found"]);
-                    $this->writeToError(reason: "Product not found", productId: $productId, code: $code);
+                    $this->writeToError(reason: "Product not found", productId: $productId, code: $code, userId: $userId);
                     return;
                 }
                 if(!isset($user)){
                     echo json_encode(["status" => "error", "message" => "User not found"]);
-                    $this->writeToError(reason: "User not found", userId: $userId, code: $code);
+                    $this->writeToError(reason: "User not found", userId: $userId, code: $code, productId: $productId);
                     return;
                 }
 
@@ -150,8 +150,8 @@ Class APIHandler{
             $username,
             $productId,
             $productname,
-            $productprice,
-            $code,
+            !in_array($code, $this->validCodes) ? $productprice : 0.00,
+            $code ?: 'NONE',
             $reason
         );
         $filename = __DIR__ . '/logs/' . "error" . date('Y-m-d_H-i-s') . bin2hex(random_bytes(5)) . '.log';
