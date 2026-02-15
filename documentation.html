@@ -8,7 +8,7 @@
 </head>
 <body>
 
-<h1>Buy Ticket Endpoint</h1>
+<!-- <h1>Buy Ticket Endpoint</h1>
 
 <h3>Base url: http://localhost:8080/fastpass</h3>
 
@@ -143,8 +143,142 @@ $response = curl_exec($ch);
 
 echo $response;
     </pre>
-</div>
+</div> -->
+<div class="container">
 
+    <header class="doc-header">
+        <h1 class="title">Buy Ticket Endpoint</h1>
+        <h3 class="base-url">Base url: http://localhost:8080/fastpass</h3>
+        <p class="description">
+            This endpoint allows a user to purchase a ticket for a specific product.
+            An optional campaign code can be provided.
+        </p>
+    </header>
+
+    <section class="endpoint-section">
+        <h2>Endpoint</h2>
+        <p class="endpoint-path">
+            <span class="badge badge-post">POST</span>
+            <code>/api/buyticket.php</code>
+        </p>
+    </section>
+
+    <nav class="toggle-menu">
+        <p id="show-require" class="toggle-btn">Request Parameters</p>
+        <p id="show-example" class="toggle-btn">Code Fetch Example</p>
+        <p id="show-response" class="toggle-btn">Example Responses</p>
+    </nav>
+
+    <section id="params" class="content-section">
+        <h2>Request Body</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Field</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>product_id</code></td>
+                <td>int</td>
+                <td>Yes</td>
+                <td>ID of the product being purchased</td>
+            </tr>
+            <tr>
+                <td><code>user_id</code></td>
+                <td>int</td>
+                <td>Yes</td>
+                <td>ID of the user making the purchase</td>
+            </tr>
+            <tr>
+                <td><code>campaign_code</code></td>
+                <td>string</td>
+                <td>No</td>
+                <td>Optional promotional or campaign code</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Example Request</h3>
+    <pre>
+{
+    "product_id": 4,
+    "user_id": 7,
+    "campaign_code": "FREEBIE"
+}
+    </pre>
+    </section>
+
+    <section id="responses" class="content-section hidden">
+<h3>Example Success Response</h3>
+    <pre>
+{
+    "status": "success",
+    "message": "successfully bought tickets"
+}
+    </pre>
+
+    <h3>Example Error Response</h3>
+    <pre>
+{
+    "status": "error",
+    "message": "Invalid data types"
+}
+    </pre>
+    </section>
+
+    <section id="jsExample" class="content-section hidden">
+<h3>Example JavaScript Fetch</h3>
+    <pre>
+const response = await fetch("http://localhost:8080/fastpass/api/buyticket.php", {
+    method: "POST",
+
+    headers: {"Content-Type": "application/json"},
+
+    body: JSON.stringify({
+        "user_id": 2,
+        "product_id": 10,
+        "campaign_code": "FREEBIE"
+    })
+});
+
+return response.json();
+    </pre>
+
+    <h3>Example PHP cURL Fetch</h3>
+    <pre>
+$url = "http://localhost:8080/fastpass/api/buyticket.php";
+
+$data = [
+    "user_id" => 2,
+    "product_id"  => 2
+];
+
+$payload = json_encode($data);
+
+$ch = curl_init($url);
+
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_HTTPHEADER => [
+        "Content-Type: application/json",
+        "Content-Length: " . strlen($payload)
+    ],
+    CURLOPT_POSTFIELDS => $payload
+]);
+
+$response = curl_exec($ch);
+
+echo $response;
+    </pre>
+    </section>
+
+</div>
 <script>
     
 const example = document.getElementById("show-example");
