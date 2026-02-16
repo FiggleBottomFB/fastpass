@@ -98,14 +98,14 @@ async function buyTicket(userid, productid) {
     const response = await fetch(minurl, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({"user_id": userid, "product_id": 10, "campaign_code": ""})
+        body: JSON.stringify({"user_id": userid, "product_id": productid, "campaign_code": ""})
     });
 
     return response.json();
 }
 
 async function spamBuyTickets() {
-    const NUMBER_OF_REQUESTS = 10000;
+    const NUMBER_OF_REQUESTS = 100;
 
     console.log("Startar stress-test...");
 
