@@ -129,7 +129,7 @@ Class APIHandler{
                 }
 
                 if (str_contains($e->getMessage(), 'X-TRANS-REJECTED')) {
-                    echo json_encode(["status" => "error", "message" => "Too many orders"]);
+                    echo json_encode(["status" => "error", "message" => "Too many similar orders"]);
                     $this->writeToError($user['username'], $product['name'], $product['price'], $e->getMessage(), $userId, $productId, $code);
                     return;
                 }
