@@ -40,6 +40,19 @@ Class APIHandler{
                 $product = $this->getProductInfo($productId);
                 $user = $this->getUserInfo($userId);
 
+                //region handle stock count update
+                $stmt = $this->conn->prepare("UPDATE products SET stock_count = stock_count - 1 WHERE id = ? AND stock_count > 0");
+                $stmt->bind_param("i", $productId);
+                $stmt->execute();
+
+                if($stmt->affected_rows !== 1){
+                    $this->conn->rollback();
+                    echo json_encode(["status" => "error", "message" => "no ticket available"]);
+                    $this->writeToError($user['username'], $product['name'], $product['price'], "no ticket available", $userId, $productId, $code);
+                    return;
+                }
+                //endregion
+
                 //region handle campaign code
                 if(!in_array($code, $this->validCodes) && $code != ""){
                     $this->conn->rollback();
@@ -58,18 +71,7 @@ Class APIHandler{
                 }
                 //endregion
 
-                //region handle stock count update
-                $stmt = $this->conn->prepare("UPDATE products SET stock_count = stock_count - 1 WHERE id = ? AND stock_count > 0");
-                $stmt->bind_param("i", $productId);
-                $stmt->execute();
 
-                if($stmt->affected_rows !== 1){
-                    $this->conn->rollback();
-                    echo json_encode(["status" => "error", "message" => "no ticket available"]);
-                    $this->writeToError($user['username'], $product['name'], $product['price'], "no ticket available", $userId, $productId, $code);
-                    return;
-                }
-                //endregion
 
                 //region handle add into orders
                 if($code == ""){

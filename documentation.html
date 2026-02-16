@@ -147,11 +147,11 @@ echo $response;
 <div class="container">
 
     <header class="doc-header">
-        <h1 class="title">Buy Ticket Endpoint</h1>
-        <h3 class="base-url">Base url: http://localhost:8080/fastpass</h3>
+        <h1 class="title">Köp Biljett Endpoint</h1>
+        <h3 class="base-url">Bas url: http://localhost:8080/fastpass</h3>
         <p class="description">
-            This endpoint allows a user to purchase a ticket for a specific product.
-            An optional campaign code can be provided.
+            Denna endpoint tillåter en användare att köpa en biljett för en specifik produkt.
+            Det går också att skicka med en kampanjkod.
         </p>
     </header>
 
@@ -164,9 +164,9 @@ echo $response;
     </section>
 
     <nav class="toggle-menu">
-        <p id="show-require" class="toggle-btn">Request Parameters</p>
-        <p id="show-example" class="toggle-btn">Code Fetch Example</p>
-        <p id="show-response" class="toggle-btn">Example Responses</p>
+        <p id="show-require" class="toggle-btn">Parametrar</p>
+        <p id="show-example" class="toggle-btn">Kod Exempel</p>
+        <p id="show-response" class="toggle-btn">Exempel Svar</p>
     </nav>
 
     <section id="params" class="content-section">
@@ -175,35 +175,35 @@ echo $response;
     <table>
         <thead>
             <tr>
-                <th>Field</th>
-                <th>Type</th>
-                <th>Required</th>
-                <th>Description</th>
+                <th>Fält</th>
+                <th>Typ</th>
+                <th>Krävs</th>
+                <th>Beskrivning</th>
             </tr>
         </thead>
         <tbody>
             <tr>
                 <td><code>product_id</code></td>
                 <td>int</td>
-                <td>Yes</td>
-                <td>ID of the product being purchased</td>
+                <td>Ja</td>
+                <td>ID för den produkt som ska köpas</td>
             </tr>
             <tr>
                 <td><code>user_id</code></td>
                 <td>int</td>
-                <td>Yes</td>
-                <td>ID of the user making the purchase</td>
+                <td>Ja</td>
+                <td>ID för den användare som gör köpet</td>
             </tr>
             <tr>
                 <td><code>campaign_code</code></td>
                 <td>string</td>
-                <td>No</td>
-                <td>Optional promotional or campaign code</td>
+                <td>Nej</td>
+                <td>Valfri kampanjkod, om denna inte skickas med eller skickas som en tom sträng så kommer det inte ge en error</td>
             </tr>
         </tbody>
     </table>
 
-    <h3>Example Request</h3>
+    <h3>Exempel Request</h3>
     <pre>
 {
     "product_id": 4,
@@ -214,7 +214,7 @@ echo $response;
     </section>
 
     <section id="responses" class="content-section hidden">
-<h3>Example Success Response</h3>
+<h3>Exempel Lyckat Svar</h3>
     <pre>
 {
     "status": "success",
@@ -222,7 +222,7 @@ echo $response;
 }
     </pre>
 
-    <h3>Example Error Response</h3>
+    <h3>Exempel Misslyckat  Svar</h3>
     <pre>
 {
     "status": "error",
@@ -232,7 +232,7 @@ echo $response;
     </section>
 
     <section id="jsExample" class="content-section hidden">
-<h3>Example JavaScript Fetch</h3>
+<h3>Exempel JavaScript Fetch</h3>
     <pre>
 const response = await fetch("http://localhost:8080/fastpass/api/buyticket.php", {
     method: "POST",
@@ -249,7 +249,7 @@ const response = await fetch("http://localhost:8080/fastpass/api/buyticket.php",
 return response.json();
     </pre>
 
-    <h3>Example PHP cURL Fetch</h3>
+    <h3>Exempel PHP cURL Fetch</h3>
     <pre>
 $url = "http://localhost:8080/fastpass/api/buyticket.php";
 

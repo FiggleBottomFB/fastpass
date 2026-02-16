@@ -1,8 +1,6 @@
 <?php
 while(true){
-    // if(file_exists("stop")){
-    //     break;
-    // }
+
     $logsDir = __DIR__ . DIRECTORY_SEPARATOR . 'logs';
     $finalLog = __DIR__ . DIRECTORY_SEPARATOR . 'orders.log';
     $errorLog = __DIR__ . DIRECTORY_SEPARATOR . 'failedorders.log';
